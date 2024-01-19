@@ -53,8 +53,8 @@ async def post_home():
     st.radio(
         ":rainbow[AI Model Selection]", options=["GPT-3.5", "GPT-4"], horizontal=True, index=None,
         key="model_selection", on_change=set_model)
-    st.write(f"Selected model: {st.session_state['model_selection']}")
-    st.write(f"Current model: {st.session_state['current_model']}")
+    # st.write(f"Selected model: {st.session_state['model_selection']}")
+    # st.write(f"Current model: {st.session_state['current_model']}")
 
     generate_post_button = st.button("Generate Post")
     logger.debug(f"Generate post button pressed: {generate_post_button}")
