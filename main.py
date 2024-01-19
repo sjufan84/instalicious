@@ -51,7 +51,7 @@ async def post_home():
     logger.debug(f"Post input: {post_input}")
 
     st.radio(
-        ":rainbow[AI Model Selection]", options=["GPT-3.5", "GPT-4"], horizontal=True, index=0,
+        ":rainbow[AI Model Selection]", options=["GPT-3.5", "GPT-4"], horizontal=True, index=None,
         key="model_selection", on_change=set_model)
     st.write(f"Selected model: {st.session_state['model_selection']}")
     st.write(f"Current model: {st.session_state['current_model']}")
@@ -113,6 +113,8 @@ async def display_post():
         st.session_state.current_image_prompt = None
         st.session_state.current_image = None
         st.session_state.post_page = "post_home"
+        st.session_state.model_selection = "GPT-3.5"
+        st.session_state.current_model = "gpt-3.5-turbo-1106"
         st.rerun()
 
 if st.session_state.post_page == "post_home":

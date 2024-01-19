@@ -27,4 +27,4 @@ def get_google_vision_credentials():
 
 def get_openai_client():
     """ Get the OpenAI client. """
-    return OpenAI(api_key=get_openai_api_key(), organization=get_openai_org(), max_retries=3, timeout=20)
+    return OpenAI(api_key=get_openai_api_key(), organization=get_openai_org(), max_retries=3, timeout=30)

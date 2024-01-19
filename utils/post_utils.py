@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 if "current_model" not in st.session_state:
     st.session_state.current_model = "gpt-3.5-turbo-1106"
 if "model_selection" not in st.session_state:
-    st.session_state.model_selection = ":violet[GPT-3.5]"
+    st.session_state.model_selection = "GPT-3.5"
 
 logger.debug(f"Current model: {st.session_state.current_model}")
 
@@ -61,8 +61,15 @@ async def create_recipe_post(recipe) -> RecipePostResponse:
             and should be a picture of the dish that the recipe is for.
 
             Ensure that the post is presented in a clear and organized manner
-            and that it adheres to the {RecipePostResponse} model as outlined above and that
-            all the keys are lowercase.  The keys are ["post", "hashtags", "image_prompt"].]"""
+            and that it adheres to the {RecipePostResponse} model as outlined above."""
+        },
+        {
+            "role" : "system", "content" : """Example Response:\n
+            {
+                "post": "This is the post that was generated.",
+                "hashtags": ["hashtag1", "hashtag2", "hashtag3"],
+                "image_prompt": "This is the image prompt that was generated."
+            }"""
         }
     ]
 
