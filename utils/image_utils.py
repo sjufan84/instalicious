@@ -1,14 +1,27 @@
 import logging
+import base64
+import io
+import json
 from pydantic import BaseModel, Field
+import streamlit as st
+from openai import OpenAIError
 from dependencies import get_openai_client
 from PIL import Image
-import requests
 
 # Create the OpenAI client
 client = get_openai_client()
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+if "image_list" not in st.session_state:
+    st.session_state["image_list"] = []
+
+# Decode Base64 JSON to Image
+def decode_image(b64_json):
+    data = json.loads(b64_json)
+    image_data = base64.b64decode(data['image'])
+    return Image.open(io.BytesIO(image_data))
 
 class ImageRequest(BaseModel):
     """ Image Request Model """
@@ -17,7 +30,7 @@ class ImageRequest(BaseModel):
 async def generate_image(prompt : str):
     """ Generate an image from the given image request. """
     logger.debug(f"Generating image for prompt: {prompt}")
-
+    image_list = []
     # Generate the image
     try:
         response = client.images.generate(
@@ -25,18 +38,17 @@ async def generate_image(prompt : str):
             model="dall-e-2",
             size="1024x1024",
             quality="standard",
-            n=1,
+            n=3,
+            response_format="b64_json"
         )
-        image_url = response.data[0].url
-        logger.debug(f"Image URL: {image_url}")
+        for i in range(len(response.data)):
+            logger.debug(f"Image {i}: {response.data[i].b64_json}")
+            image_list.append(decode_image(response.data[i].b64_json))
 
-        # Convert the image to a PIL image
-        image = Image.open(requests.get(image_url, stream=True).raw)
-        logger.debug("Image successfully converted to PIL image")
+        st.session_state["image_list"] = image_list
 
-    except Exception as e:
+        return image_list
+
+    except OpenAIError as e:
         logger.error(f"Error generating image: {e}")
         return {"error": str(e)}
-
-    # Return the image response as a string
-    return {"image": image, "image_url": image_url}
