@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 if "image_list" not in st.session_state:
     st.session_state["image_list"] = []
+if "image_model" not in st.session_state:
+    st.session_state["image_model"] = "dall-e-2"
 
 # Decode Base64 JSON to Image
 def decode_image(image_data, image_name):
@@ -35,15 +37,16 @@ class ImageRequest(BaseModel):
 async def generate_image(prompt : str):
     """ Generate an image from the given image request. """
     logger.debug(f"Generating image for prompt: {prompt}")
+    logger.debug(f"Image model: {st.session_state['image_model']}")
     image_list = []
     # Generate the image
     try:
         response = client.images.generate(
             prompt=prompt,
-            model="dall-e-3",
+            model=f"{st.session_state['image_model']}",
             size="1024x1024",
             quality="standard",
-            n=3,
+            n=1,
             response_format="b64_json"
         )
         for i in range(len(response.data)):

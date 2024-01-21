@@ -32,11 +32,11 @@ def init_session_variables():
     session_vars = [
         "current_post", "current_hashtags", "current_image_prompt", "current_image", "post_page",
         "current_model", "model_selection", "generate_image", "image_choice", "image_list",
-        "selected_images"
+        "selected_images", "image_model"
     ]
     default_values = [
         None, None, None, None, "post_home", "gpt-3.5-turbo-1106", "GPT-3.5", False, False, [],
-        []
+        [], "dall-e-2"
     ]
 
     for var, default_value in zip(session_vars, default_values):
@@ -51,6 +51,8 @@ def set_model():
         st.session_state["current_model"] = "gpt-3.5-turbo-1106"
     elif st.session_state["model_selection"] == 'GPT-4':
         st.session_state["current_model"] = "gpt-4-1106-preview"
+
+st.session_state.image_model = "dall-e-3"
 
 # Step 2: Save Image to File (optional if you only need to display it)
 def save_image(image, path="image.png"):
@@ -248,23 +250,28 @@ async def display_post():
                     }
             """,
         ):
-            col1, col2, col3 = st.columns(3)
-            # Display each image in one column with a radio button below it for the user to select
-            # Only one image can be selected at a time
-            # Use PIL to convert the image_url to a PIL image and then display it
-            with col1:
+            if st.session_state.image_model == "dall-e-2":
+                col1, col2, col3 = st.columns(3)
+                # Display each image in one column with a radio button below it for the user to select
+                # Only one image can be selected at a time
+                # Use PIL to convert the image_url to a PIL image and then display it
+                with col1:
+                    logger.debug(f"Image 1: {st.session_state.image_list[0]}")
+                    display_image(st.session_state.image_list[0])
+                    get_image_download_link(st.session_state.image_list[0], "image1.png")
+                with col2:
+                    logger.debug(f"Image 2: {st.session_state.image_list[1]}")
+                    display_image(st.session_state.image_list[1])
+                    get_image_download_link(st.session_state.image_list[1], "image2.png")
+                with col3:
+                    logger.debug(f"Image 3: {st.session_state.image_list[2]}")
+                    display_image(st.session_state.image_list[2])
+                    get_image_download_link(st.session_state.image_list[2], "image3.png")
+            elif st.session_state.image_model == "dall-e-3":
+                # If the image model is dall-e-3, display 1 image
                 logger.debug(f"Image 1: {st.session_state.image_list[0]}")
                 display_image(st.session_state.image_list[0])
                 get_image_download_link(st.session_state.image_list[0], "image1.png")
-            with col2:
-                logger.debug(f"Image 2: {st.session_state.image_list[1]}")
-                display_image(st.session_state.image_list[1])
-                get_image_download_link(st.session_state.image_list[1], "image2.png")
-            with col3:
-                logger.debug(f"Image 3: {st.session_state.image_list[2]}")
-                display_image(st.session_state.image_list[2])
-                get_image_download_link(st.session_state.image_list[2], "image3.png")
-
     st.markdown(
         """
         <p style="text-align: left; color: #000000; font-size:1em; margin-top: 30px; margin-left: 5px;">
