@@ -167,6 +167,9 @@ async def post_home():
                     st.session_state.current_image_prompt = post["image_prompt"]
                     st.session_state.post_page = "display_post"
                     st.rerun()
+        else:
+            st.warning("Please make an image choice and enter a description.")
+            
     need_help_button = st.button("Need Help? (Coming Soon)" , type="primary", disabled=True)
     about_button = st.button("About (Coming Soon)", type="primary", disabled=True)
 
