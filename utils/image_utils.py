@@ -1,7 +1,6 @@
 import logging
 import base64
 import io
-import json
 from pydantic import BaseModel, Field
 import streamlit as st
 from openai import OpenAIError
@@ -18,10 +17,16 @@ if "image_list" not in st.session_state:
     st.session_state["image_list"] = []
 
 # Decode Base64 JSON to Image
-def decode_image(b64_json):
-    data = json.loads(b64_json)
-    image_data = base64.b64decode(data['image'])
-    return Image.open(io.BytesIO(image_data))
+def decode_image(image_data, image_name):
+    """ Decode the image data from the given image request. """
+    logger.debug(f"Decoding image: {image_data}")
+    # Decode the image
+    image_bytes = base64.b64decode(image_data)
+    # Convert the bytes to an image
+    image = Image.open(io.BytesIO(image_bytes))
+    # Save the image
+    image.save(image_name)
+    return image
 
 class ImageRequest(BaseModel):
     """ Image Request Model """
@@ -43,10 +48,11 @@ async def generate_image(prompt : str):
         )
         for i in range(len(response.data)):
             logger.debug(f"Image {i}: {response.data[i].b64_json}")
-            image_list.append(decode_image(response.data[i].b64_json))
+            image_list.append(decode_image(image_data=response.data[i].b64_json, image_name=f"image{i}.png"))
+            logger.debug(f"Image list: {image_list}")
 
         st.session_state["image_list"] = image_list
-
+        logging.debug(f"Image list: {image_list}")
         return image_list
 
     except OpenAIError as e:

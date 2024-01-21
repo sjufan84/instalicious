@@ -8,6 +8,17 @@ from utils.post_utils import create_post, alter_image
 import logging
 import base64
 
+# Import Google Font in Streamlit CSS
+st.markdown(
+    """
+    <style>
+        @import url('https://fonts.googleapis.com/css?family=Anton');
+        @import url('https://fonts.googleapis.com/css2?family=Arapey&display=swap');
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # Function to encode the image
 async def encode_image(image_file):
     return base64.b64encode(image_file.read()).decode('utf-8')
@@ -47,7 +58,7 @@ def save_image(image, path="image.png"):
 
 # Step 3: Display Image in Streamlit
 def display_image(image):
-    st.image(image, caption='Decoded Image')
+    st.image(image, use_column_width=True)
 
 # Step 4: Create Download Link
 def get_image_download_link(image, filename="downloaded_image.png"):
@@ -57,104 +68,147 @@ def get_image_download_link(image, filename="downloaded_image.png"):
         label="Download Image",
         data=buffered.getvalue(),
         file_name=filename,
-        mime="image/png"
+        mime="image/png",
+        use_container_width=True
     )
-
 
 async def post_home():
     image_url = None
     logger.debug("Entering post_home function")
-    # Create a centered header using HTML with bold font
-    st.markdown(
-        """<h1 style='text-align: center; color: #000000;
-        font-size:4em'><b>INSTALICIO.US</b></h1>""", unsafe_allow_html=True
-    )
-    # Create a centered subheader using HTML with bold font
-    st.markdown(
-        """<p style='text-align: center; color: #000000; font-size:1em'>
-        <b>Transform any meal into a stunning,
-        Insta-worthy post instantly.</b></p>""", unsafe_allow_html=True
-    )
+    with stylable_container(
+        key="post-home-container",
+        css_styles="""
+                h1 {
+                    color: #000000;
+                    font-size: 4em;
+                    text-align: center;
+                    font-family: 'Anton', sans-serif;
+                }
+                p {
+                    color: #000000;
+                    font-size: 1em;
+                    text-align: center;
+                    font-family: 'Arapey', serif;
+                }
+        """,
+    ):
+        # Create a centered header using HTML with bold font
+        st.markdown(
+            """<h1><b>INSTALICIO.US</b></h1>""", unsafe_allow_html=True
+        )
+        # Create a centered subheader using HTML with bold font
+        st.markdown(
+            """<p>
+            Transform any meal into a stunning,
+            Insta-worthy post... instantly.</p>""", unsafe_allow_html=True
+        )
     st.text("")
     st.text("")
     # Create a centered subheader using HTML with bold font
     # that says "Snap a pic or upload an image"
     # Use emojis for the camera and upload icons
-    picture_mode = st.selectbox(
-        '##### 📸 Snap a Pic, 📤 Upload an Image, or Let Us Generate One For You!',
-        ("Snap a pic", "Upload an image", "Let Us Generate One For You"), index=None
-    )
-    if picture_mode == "Snap a pic":
-        uploaded_image = st.camera_input("Snap a pic")
-        # Convert the image to a base64 string
-        if uploaded_image:
-            image_url = await encode_image(uploaded_image)
-    elif picture_mode == "Upload an image":
-        # Show a file upoloader that only accepts image files
-        uploaded_image = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
-        # Convert the image to a base64 string
-        if uploaded_image:
-            image_url = await encode_image(uploaded_image)
-    elif picture_mode == "Let Us Generate One For You":
-        st.session_state.generate_image = True
-        st.session_state.image_choice = "Based on the prompt"
-        image_url = None
-
-    st.text("")
-
-    post_prompt = st.text_area("""##### Tell Us About This Recipe or Meal""")
-
-    st.radio(
-        ":rainbow[AI Model Selection]", options=["GPT-3.5", "GPT-4"], horizontal=True, index=None,
-        key="model_selection", on_change=set_model)
-    # st.write(f"Selected model: {st.session_state['model_selection']}")
-    # st.write(f"Current model: {st.session_state['current_model']}")
     with stylable_container(
-        key="submit_button_container",
+        key="post-main",
         css_styles="""
-            button {
-                background-color: #C44933;
-                border-radius: 25px;
-                color: #FFFFFF;
-            }
+        {
+            font-family: 'Arapey', serif;
+            font-size: 1em;
+        }
         """,
     ):
-        generate_post_button = st.button("Generate Post")
+        picture_mode = st.selectbox(
+            '###### 📸 Snap a Pic, 📤 Upload an Image, or Let Us Generate One For You!',
+            ("Snap a pic", "Upload an image", "Let Us Generate One For You"), index=None,
+        )
+        if picture_mode == "Snap a pic":
+            uploaded_image = st.camera_input("Snap a pic")
+            # Convert the image to a base64 string
+            if uploaded_image:
+                image_url = await encode_image(uploaded_image)
+        elif picture_mode == "Upload an image":
+            # Show a file upoloader that only accepts image files
+            uploaded_image = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
+            # Convert the image to a base64 string
+            if uploaded_image:
+                image_url = await encode_image(uploaded_image)
+        elif picture_mode == "Let Us Generate One For You":
+            st.session_state.generate_image = True
+            st.session_state.image_choice = "Based on the prompt"
+            image_url = None
+
+        st.text("")
+
+        post_prompt = st.text_area("""###### Tell Us About This Recipe or Meal""")
+
+    st.radio(
+        ":rainbow[AI Model Selection] (This option is only for testing purposes @Babette)",
+        options=["GPT-3.5", "GPT-4"], horizontal=True, index=None,
+        key="model_selection", on_change=set_model
+    )
+
+    generate_post_button = st.button("Generate Post", type="primary")
     logger.debug(f"Generate post button pressed: {generate_post_button}")
     if generate_post_button:
-        if image_url:
-            image_prompt = await alter_image(post_prompt, image_url)
-            st.session_state.current_image_prompt = image_prompt
-            post = await create_post(prompt=post_prompt, post_type="no_image")
-            st.session_state.current_post = post["post"]
-            st.session_state.current_hashtags = post["hashtags"]
-            st.session_state.post_page = "display_post"
-            st.rerun()
-        else:
-            post = await create_post(prompt=post_prompt, post_type="with_image")
-            st.session_state.current_post = post["post"]
-            st.session_state.current_hashtags = post["hashtags"]
-            st.session_state.current_image_prompt = post["image_prompt"]
-            st.session_state.post_page = "display_post"
-            st.rerun()
+        if picture_mode and post_prompt != "":
+            if image_url:
+                with st.spinner("Generating your post. This may take a minute..."):
+                    image_prompt = await alter_image(post_prompt, image_url)
+                    st.session_state.current_image_prompt = image_prompt
+                    post = await create_post(prompt=post_prompt, post_type="no_image")
+                    st.session_state.current_post = post["post"]
+                    st.session_state.current_hashtags = post["hashtags"]
+                    st.session_state.post_page = "display_post"
+                    st.rerun()
+            else:
+                with st.spinner("Generating your post. This may take a minute..."):
+                    post = await create_post(prompt=post_prompt, post_type="with_image")
+                    st.session_state.current_post = post["post"]
+                    st.session_state.current_hashtags = post["hashtags"]
+                    st.session_state.current_image_prompt = post["image_prompt"]
+                    st.session_state.post_page = "display_post"
+                    st.rerun()
+    need_help_button = st.button("Need Help? (Coming Soon)" , type="primary", disabled=True)
+    about_button = st.button("About (Coming Soon)", type="primary", disabled=True)
 
 async def display_post():
     """ Display the post and the images """
-    st.markdown("""
-    <h1 style='text-align: center; color: #000000;
-    font-size:4em'><b>INSTALICIO.US</b></h1>""", unsafe_allow_html=True)
-
-    logger.debug("Entering display_post function")
     with stylable_container(
-        key="post-display-container",
+        key="display-post-container",
         css_styles="""
-            {
-                background-color: #ffffff;
-                padding: 10px;
-                height: 100px;
-            }
+                h1 {
+                    color: #000000;
+                    font-size: 4em;
+                    text-align: center;
+                    font-family: 'Anton', sans-serif;
+                }
+                p {
+                    color: #000000;
+                    font-size: 1em;
+                    text-align: center;
+                    font-family: 'Arapey', serif;
+                }
         """,
     ):
+        # Create a centered header using HTML with bold font
+        st.markdown("""
+        <h1 style='text-align: center; color: #000000;
+        font-size:4em'><b>INSTALICIO.US</b></h1>""", unsafe_allow_html=True)
+
+    st.text("")
+
+    with stylable_container(
+        key = "display-post-main",
+        css_styles = """
+        {
+            font-family: 'Arapey', serif;
+            font-size: 1em;
+            background-color: #FFFFFF;
+            text-align: left;
+            border-radius: 10px;
+        }
+        """,
+    ):
+        logger.debug("Entering display_post function")
         # Convert the list of hashtags to a string with a space in between and
         # a "#" in front of each hashtag
         hashtags_string = " ".join(["#" + hashtag for hashtag in st.session_state["current_hashtags"]])
@@ -169,34 +223,52 @@ async def display_post():
             </div>
         ''', unsafe_allow_html=True)
 
-    st.markdown(
-        """<h4 style='text-align: center; color: #000000;
-        font-size:1em'><b>Pick Instalicious Image</b></h4>""", unsafe_allow_html=True
-    )
+    st.text("")
+    st.text("")
 
-    st.markdown("""##### Image:""")
+    st.markdown(
+        """<p style='text-align: center; color: #000000;
+        font-size: 20px; font-family:"Arapey";'>Pick Instalicious Image(s)</p>""", unsafe_allow_html=True
+    )
     if not st.session_state.image_list:
         with st.spinner("Generating your images..."):
             st.session_state.images = await generate_image(
                 st.session_state["current_image_prompt"]
             )
     if st.session_state.image_list != []:
-        st.write(st.session_state.image_list)
-        col1, col2, col3 = st.columns(3)
-        # Display each image in one column with a radio button below it for the user to select
-        # Only one image can be selected at a time
-        # Use PIL to convert the image_url to a PIL image and then display it
-        with col1:
-            display_image(st.session_state.image_list[0])
-            get_image_download_link(st.session_state.image_list[0], "image1.png")
-        with col2:
-            display_image(st.session_state.image_list[1])
-            get_image_download_link(st.session_state.image_list[1], "image2.png")
-        with col3:
-            display_image(st.session_state.image_list[2])
-            get_image_download_link(st.session_state.image_list[2], "image3.png")
+        with stylable_container(
+            key="image-display-container",
+            css_styles="""
+                    button {
+                        color: #ffffff;
+                        background-color: #f0d1b7;
+                    }
+            """,
+        ):
+            col1, col2, col3 = st.columns(3)
+            # Display each image in one column with a radio button below it for the user to select
+            # Only one image can be selected at a time
+            # Use PIL to convert the image_url to a PIL image and then display it
+            with col1:
+                logger.debug(f"Image 1: {st.session_state.image_list[0]}")
+                display_image(st.session_state.image_list[0])
+                get_image_download_link(st.session_state.image_list[0], "image1.png")
+            with col2:
+                logger.debug(f"Image 2: {st.session_state.image_list[1]}")
+                display_image(st.session_state.image_list[1])
+                get_image_download_link(st.session_state.image_list[1], "image2.png")
+            with col3:
+                logger.debug(f"Image 3: {st.session_state.image_list[2]}")
+                display_image(st.session_state.image_list[2])
+                get_image_download_link(st.session_state.image_list[2], "image3.png")
 
-    generate_new_post_button = st.button("Generate New Post")
+    st.markdown(
+        """
+        <p style="text-align: left; color: #000000; font-size:1em; margin-top: 30px; margin-left: 5px;">
+        Want to Start Over?</p>
+        """, unsafe_allow_html=True
+    )
+    generate_new_post_button = st.button("Generate New Post", type="primary")
     if generate_new_post_button:
         # Reset the session state
         st.session_state.current_post = None
