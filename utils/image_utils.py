@@ -40,7 +40,7 @@ async def generate_image(prompt : str):
     try:
         response = client.images.generate(
             prompt=prompt,
-            model="dall-e-2",
+            model="dall-e-3",
             size="1024x1024",
             quality="standard",
             n=3,
