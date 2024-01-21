@@ -32,11 +32,11 @@ def init_session_variables():
     session_vars = [
         "current_post", "current_hashtags", "current_image_prompt", "current_image", "post_page",
         "current_model", "model_selection", "generate_image", "image_choice", "image_list",
-        "selected_images", "image_model"
+        "selected_images", "image_model", "size_choice"
     ]
     default_values = [
         None, None, None, None, "post_home", "gpt-3.5-turbo-1106", "GPT-3.5", False, False, [],
-        [], "dall-e-2"
+        [], "dall-e-2", None
     ]
 
     for var, default_value in zip(session_vars, default_values):
@@ -142,6 +142,14 @@ async def post_home():
 
         post_prompt = st.text_area("""###### Tell Us About This Recipe or Meal""")
 
+    size_choice = st.radio(
+        "Select your desired format:", options=["Square", "Stories"], horizontal=True, index=None,
+    )
+    if size_choice == "Square":
+        st.session_state.size_choice = "1024x1024"
+    elif size_choice == "Stories":
+        st.session_state.size_choice = "1024x1792"
+
     st.radio(
         ":rainbow[AI Model Selection] (This option is only for testing purposes @Babette)",
         options=["GPT-3.5", "GPT-4"], horizontal=True, index=None,
@@ -151,7 +159,7 @@ async def post_home():
     generate_post_button = st.button("Generate Post", type="primary")
     logger.debug(f"Generate post button pressed: {generate_post_button}")
     if generate_post_button:
-        if picture_mode and post_prompt != "":
+        if picture_mode and post_prompt != "" and size_choice:
             if image_url:
                 with st.spinner("Generating your post. This may take a minute..."):
                     image_prompt = await alter_image(post_prompt, image_url)
@@ -170,8 +178,8 @@ async def post_home():
                     st.session_state.post_page = "display_post"
                     st.rerun()
         else:
-            st.warning("Please make an image choice and enter a description.")
-            
+            st.warning("Please make an image choice, enter a description, and select your preferred format.")
+
     need_help_button = st.button("Need Help? (Coming Soon)" , type="primary", disabled=True)
     about_button = st.button("About (Coming Soon)", type="primary", disabled=True)
 
