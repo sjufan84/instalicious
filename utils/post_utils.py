@@ -54,6 +54,7 @@ async def get_messages(post_option: str, prompt: str):
                 "content": f"""The user would like for you to generate an Instagram post optimized
                 for engagement and virality based on the prompt {prompt} they have given.  This could
                 be a recipe, a description of a dish, a description of a restaurant experience, etc.
+                If it is a recipe, you do not need to return the recipe itself, just the post text and hashtags.
                 Your response should be returned as a JSON object in the following format:
 
                 post: str = The post to be generated.
