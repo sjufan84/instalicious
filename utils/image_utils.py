@@ -13,8 +13,8 @@ client = get_openai_client()
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-if "image_list" not in st.session_state:
-    st.session_state["image_list"] = []
+if "generated_images" not in st.session_state:
+    st.session_state["generated_images"] = []
 if "size_choice" not in st.session_state:
     st.session_state["size_choice"] = "1024x1024"
 
@@ -54,6 +54,33 @@ async def generate_dalle3_image(prompt : str):
         logging.debug(f"Decoded image: {decoded_image}")
 
         return decoded_image
+
+    except OpenAIError as e:
+        logger.error(f"Error generating image: {e}")
+        return {"error": str(e)}
+
+async def generate_dalle2_images(prompt : str):
+    """ Generate an image from the given image request. """
+    image_list = []
+    logger.debug(f"Generating images for prompt: {prompt}")
+    # Generate the image
+    try:
+        response = client.images.generate(
+            prompt=prompt,
+            model="dall-e-2",
+            size="1024x1024",
+            n=3,
+            response_format="b64_json"
+        )
+        for i in range(3):
+            returned_image = response.data[i].b64_json[:100]
+            logger.debug(f"Returned image: {returned_image}")
+            decoded_image = decode_image(image_data=response.data[i].b64_json, image_name=f"image{i}.png")
+            image_list.append(decoded_image)
+            logging.debug(f"Decoded image: {decoded_image}")
+
+        st.session_state.generated_images = image_list
+        return image_list
 
     except OpenAIError as e:
         logger.error(f"Error generating image: {e}")
