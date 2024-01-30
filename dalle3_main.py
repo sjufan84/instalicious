@@ -201,11 +201,13 @@ async def post_home():
         if examples_button:
             switch_page("Examples")
             st.rerun()
-        st.text("")
         st.markdown(
-            """**Lastly,** :red[**please help us out by filling out a feedback form
-            to help us improve the tool!  We need your input to help us grow and get better.
-            Thank you!**]"""
+            """
+            <p style="text-align: left; color: #000000; font-size:1em; margin-top: 30px; margin-left: 5px;">
+            Before you leave, please <a href="http://www.google.com";
+            color="blue";>fill out a quick survey</a>
+            to tell us about your experience and help us get better!</p>
+            """, unsafe_allow_html=True
         )
 
     # need_help_button = st.button("Need Help? (Coming Soon)" , type="primary", disabled=True)
@@ -282,7 +284,7 @@ async def display_post():
             css_styles="""
                     button {
                         color: #ffffff;
-                        background-color: #f0d1b7;
+                        background-color: #76beaa;
                     }
             """,
         ):
@@ -294,7 +296,9 @@ async def display_post():
     st.markdown(
         """
         <p style="text-align: left; color: #000000; font-size:1em; margin-top: 30px; margin-left: 5px;">
-        Want to Start Over?</p>
+        Want to Start Over? Before you do, please
+        <a href="http://www.google.com"; color="blue";>fill out a quick survey</a>
+        to tell us about your experience and help us get better!</p>
         """, unsafe_allow_html=True
     )
     generate_new_post_button = st.button("Generate New Post", type="primary", use_container_width=True)
