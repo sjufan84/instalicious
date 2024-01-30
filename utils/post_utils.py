@@ -12,15 +12,12 @@ client = get_openai_client()
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-if "current_model" not in st.session_state:
-    st.session_state.current_model = "gpt-3.5-turbo-1106"
-if "model_selection" not in st.session_state:
-    st.session_state.model_selection = "GPT-3.5"
-
 logger.debug(f"Current model: {st.session_state.current_model}")
 
-# core_models = ["gpt-4-1106-preview", "gpt-3.5-turbo-1106"]
-# logger.debug(f"Core models: {core_models}")
+if "vision_status" not in st.session_state:
+    st.session_state["vision_status"] = "not_used"
+if "vision_prompt" not in st.session_state:
+    st.session_state["vision_prompt"] = ""
 
 class ImagePostResponse(BaseModel):
     """ Image Post Response Model """
@@ -43,7 +40,6 @@ initial_message = [
     }
 ]
 
-
 async def get_messages(post_option: str, prompt: str):
     """ Get the messages for the post option """
     messages = []
@@ -54,7 +50,8 @@ async def get_messages(post_option: str, prompt: str):
                 "content": f"""The user would like for you to generate an Instagram post optimized
                 for engagement and virality based on the prompt {prompt} they have given.  This could
                 be a recipe, a description of a dish, a description of a restaurant experience, etc.
-                If it is a recipe, you do not need to return the recipe itself, just the post text and hashtags.
+                If it is a recipe, you do not need to return the recipe itself,
+                just the post text and hashtags.
                 Your response should be returned as a JSON object in the following format:
 
                 post: str = The post to be generated.
@@ -111,36 +108,34 @@ async def get_messages(post_option: str, prompt: str):
 async def create_post(post_type: str, prompt: str):
     """ Generate a post based on a user prompt"""
     messages = await get_messages(post_type, prompt)
-    i = 0
-    max_retries = 3
-    while i < max_retries:
-        try:
-            logger.debug(f"Trying model: {st.session_state.current_model}")
-            response = client.chat.completions.create(
-                model=st.session_state.current_model,
-                messages=messages,
-                temperature=0.75,
-                top_p=1,
-                max_tokens=750,
-                response_format={"type": "json_object"}
-            )
-            post_response = json.loads(response.choices[0].message.content)
-            logger.debug(f"Response: {post_response}")
-            logger.debug(f"Response type: {type(post_response)}")
-            return {
-                "post": post_response["post"], "hashtags": post_response["hashtags"],
-                "image_prompt": post_response["image_prompt"] if "image_prompt" in post_response else None
-            }
+    try:
+        logger.debug(f"Trying model: {st.session_state.current_model}")
+        response = client.chat.completions.create(
+            model="gpt-4-turbo-preview",
+            messages=messages,
+            temperature=0.75,
+            top_p=1,
+            max_tokens=750,
+            response_format={"type": "json_object"}
+        )
+        post_response = json.loads(response.choices[0].message.content)
+        logger.debug(f"Response: {post_response}")
+        logger.debug(f"Response type: {type(post_response)}")
+        return {
+            "post": post_response["post"], "hashtags": post_response["hashtags"],
+            "image_prompt": post_response["image_prompt"] if "image_prompt" in post_response else None
+        }
 
-        except OpenAIError as e:
-            logger.error(f"Error with model: {st.session_state.current_model}. Error: {e}")
-            i += 1
+    except OpenAIError as e:
+        logger.error(f"Error with model: {st.session_state.current_model}. Error: {e}")
+        return f"Error with model: {st.session_state.current_model}. Error: {e}"
 
     logger.warning("All models failed. Returning None.")
     return None
 
 async def alter_image(prompt: str, image_url: str):
     """ Generate a new dall-e prompt based on the user prompt and the image """
+    st.session_state.vision_status = "used"
     messages = [
         {
             "role": "system", "content": [
@@ -162,7 +157,8 @@ async def alter_image(prompt: str, image_url: str):
                     "type" : "text", "text" : "This is the image that was passed to you:"
                 },
                 {
-                    "type" : "image_url", "image_url" : f"data:image/jpeg;base64,{image_url}"
+                    "type" : "image_url", "image_url" : f"""data:image/jpeg;base64,
+                    {st.session_state.user_image_string}"""
                 }
             ]
         }
@@ -177,6 +173,7 @@ async def alter_image(prompt: str, image_url: str):
         logger.debug(f"Response: {response}")
         prompt_response = response.choices[0].message.content
         logger.debug(f"Prompt response: {prompt_response}")
+        st.session_state.vision_prompt = prompt_response
         return prompt_response
     except OpenAIError as e:
         logger.error(f"Error generating prompt for image alteration: {e}")

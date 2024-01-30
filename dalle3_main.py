@@ -3,7 +3,7 @@ import streamlit as st
 import asyncio
 import io
 from streamlit_extras.stylable_container import stylable_container
-from utils.image_utils import generate_image
+from utils.image_utils import generate_dalle3_image
 from utils.post_utils import create_post, alter_image
 import logging
 import base64
@@ -19,10 +19,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Function to encode the image
-async def encode_image(image_file):
-    return base64.b64encode(image_file.read()).decode('utf-8')
-
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -30,35 +26,36 @@ logger = logging.getLogger(__name__)
 def init_session_variables():
     # Initialize session state variables
     session_vars = [
-        "current_post", "current_hashtags", "current_image_prompt", "current_image", "post_page",
-        "current_model", "model_selection", "generate_image", "image_choice", "image_list",
-        "selected_images", "image_model", "size_choice"
+        "image_model", "user_image_string", "generate_image", "size_choice",
+        "current_post", "current_hashtags", "current_image_prompt", "post_page", "generated_image"
     ]
     default_values = [
-        None, None, None, None, "post_home", "gpt-3.5-turbo-1106", "GPT-3.5", False, False, [],
-        [], "dall-e-2", None
+        "dall-e-3", None, False, "1024x1024", None, None, None, "post_home",
+        None
     ]
 
     for var, default_value in zip(session_vars, default_values):
         if var not in st.session_state:
             st.session_state[var] = default_value
 
+def reset_session_variables():
+    session_vars = [
+        "image_model", "is_user_image", "user_image_string", "generate_image", "size_choice",
+        "current_post", "current_hashtags", "current_image_prompt", "generated_image", "post_page"
+    ]
+    for var in session_vars:
+        if var in st.session_state:
+            del st.session_state[var]
+
 init_session_variables()
 
-# Define the callback function to update the session state
-def set_model():
-    if st.session_state["model_selection"] == 'GPT-3.5':
-        st.session_state["current_model"] = "gpt-3.5-turbo-1106"
-    elif st.session_state["model_selection"] == 'GPT-4':
-        st.session_state["current_model"] = "gpt-4-1106-preview"
+# Function to encode the image
+async def encode_image(image_file):
+    return base64.b64encode(image_file.read()).decode('utf-8')
 
-st.session_state.image_model = "dall-e-3"
-
-# Step 2: Save Image to File (optional if you only need to display it)
 def save_image(image, path="image.png"):
     image.save(path)
 
-# Step 3: Display Image in Streamlit
 def display_image(image):
     st.image(image, use_column_width=True)
 
@@ -75,8 +72,7 @@ def get_image_download_link(image, filename="downloaded_image.png"):
     )
 
 async def post_home():
-    image_url = None
-    logger.debug("Entering post_home function")
+    image_string = None
     with stylable_container(
         key="post-home-container",
         css_styles="""
@@ -106,9 +102,7 @@ async def post_home():
         )
     st.text("")
     st.text("")
-    # Create a centered subheader using HTML with bold font
-    # that says "Snap a pic or upload an image"
-    # Use emojis for the camera and upload icons
+
     with stylable_container(
         key="post-main",
         css_styles="""
@@ -124,22 +118,25 @@ async def post_home():
         )
         if picture_mode == "Snap a pic":
             uploaded_image = st.camera_input("Snap a pic")
-            # Convert the image to a base64 string
             if uploaded_image:
-                image_url = await encode_image(uploaded_image)
+                # Convert the image to a base64 string
+                image_string = await encode_image(uploaded_image)
+                st.session_state.user_image_string = image_string
+                # Set the session state image to base64 string
+                st.write(f"User Snapped Image: {st.session_state.user_image_string[:100]}")
+
         elif picture_mode == "Upload an image":
             # Show a file upoloader that only accepts image files
             uploaded_image = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
             # Convert the image to a base64 string
             if uploaded_image:
-                image_url = await encode_image(uploaded_image)
+                image_string = await encode_image(uploaded_image)
+                st.session_state.user_image_string = image_string
+                st.write(f"Uploaded Image: {st.session_state.user_image_string[:100]}")
         elif picture_mode == "Let Us Generate One For You":
             st.session_state.generate_image = True
-            st.session_state.image_choice = "Based on the prompt"
-            image_url = None
 
         st.text("")
-
         post_prompt = st.text_area("""###### Tell Us About This Recipe or Meal""")
 
     size_choice = st.radio(
@@ -149,39 +146,36 @@ async def post_home():
         st.session_state.size_choice = "1024x1024"
     elif size_choice == "Stories":
         st.session_state.size_choice = "1024x1792"
-
-    st.radio(
-        ":rainbow[AI Model Selection] (This option is only for testing purposes @Babette)",
-        options=["GPT-3.5", "GPT-4"], horizontal=True, index=None,
-        key="model_selection", on_change=set_model
-    )
-
+    st.write(f"Size choice: {st.session_state.size_choice}")
     generate_post_button = st.button("Generate Post", type="primary")
     logger.debug(f"Generate post button pressed: {generate_post_button}")
     if generate_post_button:
-        if picture_mode and post_prompt != "" and size_choice:
-            if image_url:
-                with st.spinner("Generating your post. This may take a minute..."):
-                    image_prompt = await alter_image(post_prompt, image_url)
-                    st.session_state.current_image_prompt = image_prompt
-                    post = await create_post(prompt=post_prompt, post_type="no_image")
-                    st.session_state.current_post = post["post"]
-                    st.session_state.current_hashtags = post["hashtags"]
-                    st.session_state.post_page = "display_post"
-                    st.rerun()
-            else:
-                with st.spinner("Generating your post. This may take a minute..."):
-                    post = await create_post(prompt=post_prompt, post_type="with_image")
-                    st.session_state.current_post = post["post"]
-                    st.session_state.current_hashtags = post["hashtags"]
-                    st.session_state.current_image_prompt = post["image_prompt"]
-                    st.session_state.post_page = "display_post"
-                    st.rerun()
+        if picture_mode and post_prompt != "" and size_choice and st.session_state.user_image_string:
+            with st.spinner("Generating your post. This may take a minute..."):
+                image_prompt = await alter_image(post_prompt, st.session_state.user_image_string)
+                st.write(f"Image prompt: {image_prompt}")
+                st.session_state.current_image_prompt = image_prompt
+                post = await create_post(prompt=post_prompt, post_type="no_image")
+                st.write(f"Post: {post}")
+                st.session_state.current_post = post["post"]
+                st.session_state.current_hashtags = post["hashtags"]
+                st.session_state.post_page = "display_post"
+                st.rerun()
+        elif picture_mode and post_prompt != "" and size_choice and not st.session_state.user_image_string:
+            with st.spinner("Generating your post. This may take a minute..."):
+                post = await create_post(prompt=post_prompt, post_type="with_image")
+                st.write(f"Post: {post}")
+                st.stop()
+                st.session_state.current_post = post["post"]
+                st.session_state.current_hashtags = post["hashtags"]
+                st.session_state.current_image_prompt = post["image_prompt"]
+                st.session_state.post_page = "display_post"
+                st.rerun()
         else:
             st.warning("Please make an image choice, enter a description, and select your preferred format.")
 
-    need_help_button = st.button("Need Help? (Coming Soon)" , type="primary", disabled=True)
-    about_button = st.button("About (Coming Soon)", type="primary", disabled=True)
+    # need_help_button = st.button("Need Help? (Coming Soon)" , type="primary", disabled=True)
+    # about_button = st.button("About (Coming Soon)", type="primary", disabled=True)
 
 async def display_post():
     """ Display the post and the images """
@@ -245,10 +239,10 @@ async def display_post():
     )
     if not st.session_state.image_list:
         with st.spinner("Generating your images..."):
-            st.session_state.images = await generate_image(
+            st.session_state.generated_image = await generate_dalle3_image(
                 st.session_state["current_image_prompt"]
             )
-    if st.session_state.image_list != []:
+    if st.session_state.generated_image:
         with stylable_container(
             key="image-display-container",
             css_styles="""
@@ -258,28 +252,11 @@ async def display_post():
                     }
             """,
         ):
-            if st.session_state.image_model == "dall-e-2":
-                col1, col2, col3 = st.columns(3)
-                # Display each image in one column with a radio button below it for the user to select
-                # Only one image can be selected at a time
-                # Use PIL to convert the image_url to a PIL image and then display it
-                with col1:
-                    logger.debug(f"Image 1: {st.session_state.image_list[0]}")
-                    display_image(st.session_state.image_list[0])
-                    get_image_download_link(st.session_state.image_list[0], "image1.png")
-                with col2:
-                    logger.debug(f"Image 2: {st.session_state.image_list[1]}")
-                    display_image(st.session_state.image_list[1])
-                    get_image_download_link(st.session_state.image_list[1], "image2.png")
-                with col3:
-                    logger.debug(f"Image 3: {st.session_state.image_list[2]}")
-                    display_image(st.session_state.image_list[2])
-                    get_image_download_link(st.session_state.image_list[2], "image3.png")
-            elif st.session_state.image_model == "dall-e-3":
-                # If the image model is dall-e-3, display 1 image
-                logger.debug(f"Image 1: {st.session_state.image_list[0]}")
-                display_image(st.session_state.image_list[0])
-                get_image_download_link(st.session_state.image_list[0], "image1.png")
+            # If the image model is dall-e-3, display 1 image
+            logger.debug(f"Your Image: {st.session_state.generated_image}")
+            display_image(st.session_state.generated_image)
+            get_image_download_link(st.session_state.generated_image, filename="instalicious_image.png")
+
     st.markdown(
         """
         <p style="text-align: left; color: #000000; font-size:1em; margin-top: 30px; margin-left: 5px;">
@@ -289,18 +266,7 @@ async def display_post():
     generate_new_post_button = st.button("Generate New Post", type="primary")
     if generate_new_post_button:
         # Reset the session state
-        st.session_state.current_post = None
-        st.session_state.current_hashtags = None
-        st.session_state.current_image_prompt = None
-        st.session_state.generate_image = False
-        st.session_state.image_choice = False
-        st.session_state.current_image = None
-        st.session_state.post_page = "post_home"
-        st.session_state.model_selection = "GPT-3.5"
-        st.session_state.current_model = "gpt-3.5-turbo-1106"
-        st.session_state.image_list = None
-        st.session_state.selected_image = None
-        st.rerun()
+        reset_session_variables()
 
 if st.session_state.post_page == "post_home":
     logger.debug("Running post_home function")

@@ -36,11 +36,10 @@ class ImageRequest(BaseModel):
     """ Image Request Model """
     prompt: str = Field(..., title="Prompt", description="The prompt to generate an image from.")
 
-async def generate_image(prompt : str):
+async def generate_dalle3_image(prompt : str):
     """ Generate an image from the given image request. """
     logger.debug(f"Generating image for prompt: {prompt}")
     logger.debug(f"Image model: {st.session_state['image_model']}")
-    image_list = []
     # Generate the image
     try:
         response = client.images.generate(
@@ -51,14 +50,12 @@ async def generate_image(prompt : str):
             n=1,
             response_format="b64_json"
         )
-        for i in range(len(response.data)):
-            logger.debug(f"Image {i}: {response.data[i].b64_json}")
-            image_list.append(decode_image(image_data=response.data[i].b64_json, image_name=f"image{i}.png"))
-            logger.debug(f"Image list: {image_list}")
+        returned_image = response.data[0].b64_json[:100]
+        logger.debug(f"Returned image: {returned_image}")
+        decoded_image = decode_image(image_data=response.data[0].b64_json, image_name="image.png")
+        logging.debug(f"Decoded image: {decoded_image}")
 
-        st.session_state["image_list"] = image_list
-        logging.debug(f"Image list: {image_list}")
-        return image_list
+        return decoded_image
 
     except OpenAIError as e:
         logger.error(f"Error generating image: {e}")
