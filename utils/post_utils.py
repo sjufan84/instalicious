@@ -12,8 +12,6 @@ client = get_openai_client()
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-logger.debug(f"Current model: {st.session_state.current_model}")
-
 if "vision_status" not in st.session_state:
     st.session_state["vision_status"] = "not_used"
 if "vision_prompt" not in st.session_state:
@@ -109,7 +107,6 @@ async def create_post(post_type: str, prompt: str):
     """ Generate a post based on a user prompt"""
     messages = await get_messages(post_type, prompt)
     try:
-        logger.debug(f"Trying model: {st.session_state.current_model}")
         response = client.chat.completions.create(
             model="gpt-4-turbo-preview",
             messages=messages,
@@ -127,8 +124,8 @@ async def create_post(post_type: str, prompt: str):
         }
 
     except OpenAIError as e:
-        logger.error(f"Error with model: {st.session_state.current_model}. Error: {e}")
-        return f"Error with model: {st.session_state.current_model}. Error: {e}"
+        logger.error(f"Error with model: gpt-4-turbo-preview. Error: {e}")
+        return f"Error with model: gpt-4-preview. Error: {e}"
 
     logger.warning("All models failed. Returning None.")
     return None

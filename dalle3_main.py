@@ -3,6 +3,7 @@ import streamlit as st
 import asyncio
 import io
 from streamlit_extras.stylable_container import stylable_container
+from streamlit_extras.switch_page_button import switch_page
 from utils.image_utils import generate_dalle3_image
 from utils.post_utils import create_post, alter_image
 import logging
@@ -122,8 +123,6 @@ async def post_home():
                 # Convert the image to a base64 string
                 image_string = await encode_image(uploaded_image)
                 st.session_state.user_image_string = image_string
-                # Set the session state image to base64 string
-                st.write(f"User Snapped Image: {st.session_state.user_image_string[:100]}")
 
         elif picture_mode == "Upload an image":
             # Show a file upoloader that only accepts image files
@@ -132,7 +131,6 @@ async def post_home():
             if uploaded_image:
                 image_string = await encode_image(uploaded_image)
                 st.session_state.user_image_string = image_string
-                st.write(f"Uploaded Image: {st.session_state.user_image_string[:100]}")
         elif picture_mode == "Let Us Generate One For You":
             st.session_state.generate_image = True
 
@@ -146,17 +144,14 @@ async def post_home():
         st.session_state.size_choice = "1024x1024"
     elif size_choice == "Stories":
         st.session_state.size_choice = "1024x1792"
-    st.write(f"Size choice: {st.session_state.size_choice}")
-    generate_post_button = st.button("Generate Post", type="primary")
+    generate_post_button = st.button("Generate Post", type="primary", use_container_width=True)
     logger.debug(f"Generate post button pressed: {generate_post_button}")
     if generate_post_button:
         if picture_mode and post_prompt != "" and size_choice and st.session_state.user_image_string:
             with st.spinner("Generating your post. This may take a minute..."):
                 image_prompt = await alter_image(post_prompt, st.session_state.user_image_string)
-                st.write(f"Image prompt: {image_prompt}")
                 st.session_state.current_image_prompt = image_prompt
                 post = await create_post(prompt=post_prompt, post_type="no_image")
-                st.write(f"Post: {post}")
                 st.session_state.current_post = post["post"]
                 st.session_state.current_hashtags = post["hashtags"]
                 st.session_state.post_page = "display_post"
@@ -164,8 +159,6 @@ async def post_home():
         elif picture_mode and post_prompt != "" and size_choice and not st.session_state.user_image_string:
             with st.spinner("Generating your post. This may take a minute..."):
                 post = await create_post(prompt=post_prompt, post_type="with_image")
-                st.write(f"Post: {post}")
-                st.stop()
                 st.session_state.current_post = post["post"]
                 st.session_state.current_hashtags = post["hashtags"]
                 st.session_state.current_image_prompt = post["image_prompt"]
@@ -174,11 +167,47 @@ async def post_home():
         else:
             st.warning("Please make an image choice, enter a description, and select your preferred format.")
 
+    st.text("")
+    st.text("")
+    with stylable_container(
+        key="post-home-footer",
+        css_styles="""
+        {
+            font-family: 'Arapey', serif;
+            font-size: 1.1em;
+        }
+        """,
+    ):
+        st.markdown(
+            """**How it works:** Instalicio.us uses cutting edge AI to generate stunning images and
+            posts optimized for engagement and virality based on your prompt.  This could be a description
+            of the dish and a setting, a pasted recipe, a restaurant experience you had, etc.
+            Let your imagination
+            run wild!  If you snap or upload an image, a separate model "looks at" the image,
+            and then factors that in to the post generation as well."""
+        )
+        st.markdown(
+            """**If you need some inspiration**, click the button below to
+            see some examples of posts that Instalicio.us has generated.
+            Whether you are trying to enhance an image you already have or
+            generate a completely new one, we think you will find the tool useful and delightful."""
+        )
+        examples_button = st.button("See Examples", type="primary", use_container_width=True)
+        if examples_button:
+            switch_page("Examples")
+            st.rerun()
+        st.text("")
+        st.markdown(
+            """**Lastly,** :red[**please help us out by filling out a feedback form
+            to help us improve the tool!  We need your input to help us grow and get better.
+            Thank you!**]"""
+        )
+
     # need_help_button = st.button("Need Help? (Coming Soon)" , type="primary", disabled=True)
     # about_button = st.button("About (Coming Soon)", type="primary", disabled=True)
 
 async def display_post():
-    """ Display the post and the images """
+    """ Display the post and the image """
     with stylable_container(
         key="display-post-container",
         css_styles="""
@@ -235,10 +264,10 @@ async def display_post():
 
     st.markdown(
         """<p style='text-align: center; color: #000000;
-        font-size: 20px; font-family:"Arapey";'>Pick Instalicious Image(s)</p>""", unsafe_allow_html=True
+        font-size: 20px; font-family:"Arapey";'>Here's your image!</p>""", unsafe_allow_html=True
     )
-    if not st.session_state.image_list:
-        with st.spinner("Generating your images..."):
+    if not st.session_state.generated_image:
+        with st.spinner("Generating your image..."):
             st.session_state.generated_image = await generate_dalle3_image(
                 st.session_state["current_image_prompt"]
             )
@@ -267,6 +296,7 @@ async def display_post():
     if generate_new_post_button:
         # Reset the session state
         reset_session_variables()
+        st.rerun()
 
 if st.session_state.post_page == "post_home":
     logger.debug("Running post_home function")

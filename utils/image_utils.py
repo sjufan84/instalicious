@@ -15,8 +15,6 @@ logger = logging.getLogger(__name__)
 
 if "image_list" not in st.session_state:
     st.session_state["image_list"] = []
-if "image_model" not in st.session_state:
-    st.session_state["image_model"] = "dall-e-2"
 if "size_choice" not in st.session_state:
     st.session_state["size_choice"] = "1024x1024"
 
@@ -44,7 +42,7 @@ async def generate_dalle3_image(prompt : str):
     try:
         response = client.images.generate(
             prompt=prompt,
-            model=f"{st.session_state['image_model']}",
+            model="dall-e-3",
             size=f"{st.session_state['size_choice']}",
             quality="standard",
             n=1,
