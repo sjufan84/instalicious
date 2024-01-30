@@ -9,6 +9,11 @@ from utils.post_utils import create_post, alter_image
 import logging
 import base64
 
+st.set_page_config(
+    page_title="Instalicio.us",
+    initial_sidebar_state="collapsed",
+)
+
 # Import Google Font in Streamlit CSS
 st.markdown(
     """
@@ -292,7 +297,7 @@ async def display_post():
         Want to Start Over?</p>
         """, unsafe_allow_html=True
     )
-    generate_new_post_button = st.button("Generate New Post", type="primary")
+    generate_new_post_button = st.button("Generate New Post", type="primary", use_container_width=True)
     if generate_new_post_button:
         # Reset the session state
         reset_session_variables()
