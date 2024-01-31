@@ -2,12 +2,35 @@
 import streamlit as st
 import asyncio
 import io
+from PIL import Image
+from pillow_heif import register_heif_opener
 from streamlit_extras.stylable_container import stylable_container
 from streamlit_extras.switch_page_button import switch_page
 from utils.image_utils import generate_dalle2_images
 from utils.post_utils import create_post, alter_image
 import logging
 import base64
+
+register_heif_opener()
+
+def heic_to_base64(heic_path):
+    # Read HEIC file
+    heif_file = Image.open(heic_path)
+
+    # Convert to RGB
+    img = heif_file.convert("RGB")
+
+    # Create an in-memory file object
+    buffer = io.BytesIO()
+
+    # Save the image to the in-memory file object
+    img.save(buffer, format="JPEG")
+
+    # Encode to Base64
+    img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+    return img_base64
+
 
 st.set_page_config(
     page_title="Instalicio.us",
@@ -138,16 +161,25 @@ async def post_home():
         if picture_mode == "Snap a pic":
             uploaded_image = st.camera_input("Snap a pic")
             if uploaded_image:
-                # Convert the image to a base64 string
-                image_string = await encode_image(uploaded_image)
+                if uploaded_image.name.endswith(".heic") or uploaded_image.name.endswith(".HEIC"):
+                    image_string = heic_to_base64(uploaded_image)
+                    st.session_state.user_image_string = image_string
+                else:
+                    image_string = await encode_image(uploaded_image)
                 st.session_state.user_image_string = image_string
 
         elif picture_mode == "Upload an image":
             # Show a file upoloader that only accepts image files
-            uploaded_image = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
+            uploaded_image = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg", "heic", "HEIC"])
             # Convert the image to a base64 string
             if uploaded_image:
-                image_string = await encode_image(uploaded_image)
+                # If the file type is .heic or .HEIC, convert to a .png using PIL
+                if uploaded_image.name.endswith(".heic") or uploaded_image.name.endswith(".HEIC"):
+                    image_string = heic_to_base64(uploaded_image)
+                    st.session_state.user_image_string = image_string
+                else:
+                    image_string = await encode_image(uploaded_image)
+                st.write(image_string[:100] + "...")
                 st.session_state.user_image_string = image_string
         elif picture_mode == "Let Us Generate One For You":
             st.session_state.generate_image = True
