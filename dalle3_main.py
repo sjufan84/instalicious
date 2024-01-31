@@ -36,7 +36,7 @@ def init_session_variables():
         "current_post", "current_hashtags", "current_image_prompt", "post_page", "generated_image"
     ]
     default_values = [
-        "dall-e-3", None, False, "1024x1024", None, None, None, "post_home",
+        "dall-e-3", None, False, "1024x1024", None, None, None, "post_verify",
         None
     ]
 
@@ -47,11 +47,13 @@ def init_session_variables():
 def reset_session_variables():
     session_vars = [
         "image_model", "is_user_image", "user_image_string", "generate_image", "size_choice",
-        "current_post", "current_hashtags", "current_image_prompt", "generated_image", "post_page"
+        "current_post", "current_hashtags", "current_image_prompt", "generated_image"
     ]
     for var in session_vars:
         if var in st.session_state:
             del st.session_state[var]
+
+    st.session_state.post_page = "post_home"
 
 init_session_variables()
 
@@ -76,6 +78,16 @@ def get_image_download_link(image, filename="downloaded_image.png"):
         mime="image/png",
         use_container_width=True
     )
+
+def post_verify():
+    password_input = st.text_input("Enter the password to access this page", type="password")
+    submit_password_button = st.button("Submit", type="primary", use_container_width=True)
+    if submit_password_button:
+        if password_input == "cupcake":
+            st.session_state.post_page = "post_home"
+            st.rerun()
+        else:
+            st.warning("Incorrect password. Please try again.")
 
 async def post_home():
     image_string = None
@@ -307,7 +319,10 @@ async def display_post():
         reset_session_variables()
         st.rerun()
 
-if st.session_state.post_page == "post_home":
+if st.session_state.post_page == "post_verify":
+    logger.debug("Running post_verify function")
+    post_verify()
+elif st.session_state.post_page == "post_home":
     logger.debug("Running post_home function")
     asyncio.run(post_home())
 elif st.session_state.post_page == "display_post":
