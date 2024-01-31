@@ -21,7 +21,7 @@ def main():
 
         prompts_list = [
             "california roll, bartop, craft cocktail, speakeasy", """
-            *Notice below, the user uploaded a recipe to generate a post from.*\n
+            *Notice below, the user pasted a recipe to generate a post from.*\n
             **WHY I LOVE THIS RECIPE:**\n
             Arroz Caldo is also known as chicken congee or porridge, a comfort food that
             mirrors the traditional chicken noodle soup.
