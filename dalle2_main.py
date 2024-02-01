@@ -285,8 +285,8 @@ async def display_post():
     html = f"""
     <input type="text" id="textToCopy" value="{total_post}" style="color:transparent;
     border-color:transparent;">
-    <button onclick="copyToClipboard()" style="background-color:transparent;
-    margin-left: 9em; border-radius:4px;">Copy Post 📋</button>
+    <button onclick="copyToClipboard()" style="background-color:transparent; height: 2.75em;
+    margin-left: 7em; border-radius:4px; font-size:1em;">Copy Post 📋</button>
 
     <script>
         function copyToClipboard() {{
@@ -299,7 +299,8 @@ async def display_post():
     </script>
     """
 
-    components.html(html, height=50)
+    components.html(html, height=75)
+    st.text("")
     st.markdown(
         """<p style='text-align: center; color: #000000;
         font-size: 20px; font-family:"Arapey";'>Here are your images!</p>""", unsafe_allow_html=True

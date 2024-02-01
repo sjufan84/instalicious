@@ -49,7 +49,9 @@ async def get_messages(post_option: str, prompt: str):
                 for engagement and virality based on the prompt {prompt} they have given.  This could
                 be a recipe, a description of a dish, a description of a restaurant experience, etc.
                 If it is a recipe, you do not need to return the recipe itself,
-                just the post text and hashtags.
+                just the post text and hashtags. Make sure that there are no hands in the image,
+                that the highlight of the image is the food itself,
+                and that it is as photo-realistic as possible.
                 Your response should be returned as a JSON object in the following format:
 
                 post: str = The post to be generated.
@@ -142,9 +144,11 @@ async def alter_image(prompt: str, image_url: str):
                     would like to convert into a viral Instagram post. The prompt may be a recipe, a dish,
                     a description of a restaurant experience, etc.  Based on the prompt and the image,
                     create an image prompt for dall-e that takes the original image and
-                    optimizes it for maxiumum engagement on Instagram.  You only need to
-                    focus on the new image prompt for
-                    dall-e.  Only return the prompt for dall-e to use to generate the new, optimized image."""
+                    optimizes it for maxiumum engagement on Instagram.  Make sure that there
+                    are no hands in the generated image, that the highlight of the image is the food itself,
+                    and that it is as photo-realistic as possible. You only need to focus
+                    on the new image prompt for dall-e.  Only return the prompt for dall-e
+                    to use to generate the new, optimized image."""
                 }
             ]
         },

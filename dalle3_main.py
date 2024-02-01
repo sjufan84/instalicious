@@ -295,7 +295,7 @@ async def display_post():
     <input type="text" id="textToCopy" value="{total_post}" style="color:transparent;
     border-color:transparent;">
     <button onclick="copyToClipboard()" style="background-color:transparent;
-    margin-left: 9em; border-radius:4px;">Copy Post 📋</button>
+    margin-left: 8.75em; height: 2.75em; border-radius:4px; text-align: center;">Copy Post 📋</button>
 
     <script>
         function copyToClipboard() {{
@@ -307,7 +307,7 @@ async def display_post():
         }}
     </script>
     """
-    components.html(html, height=50)
+    components.html(html, height=75)
 
     st.markdown(
         """<p style='text-align: center; color: #000000;
