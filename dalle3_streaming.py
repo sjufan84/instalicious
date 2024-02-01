@@ -62,11 +62,12 @@ def init_session_variables():
     # Initialize session state variables
     session_vars = [
         "image_model", "user_image_string", "generate_image", "post_prompt",
-        "current_post", "current_hashtags", "current_image_prompt", "post_page", "generated_image"
+        "current_post", "current_hashtags", "current_image_prompt", "post_page",
+        "generated_image", "size_choice"
     ]
     default_values = [
         "dall-e-3", None, False, None, None, None, None, "post_verify",
-        []
+        [], None
     ]
 
     for var, default_value in zip(session_vars, default_values):
@@ -194,15 +195,23 @@ async def post_home():
         st.text("")
         post_prompt = st.text_area("""###### Tell Us About This Recipe or Meal""")
 
+        size_choice = st.radio(
+            "Select your desired format:", options=["Square", "Stories"], horizontal=True, index=None,
+        )
+        if size_choice == "Square":
+            st.session_state.size_choice = "1024x1024"
+        elif size_choice == "Stories":
+            st.session_state.size_choice = "1024x1792"
+
         generate_post_button = st.button("Generate Post", type="primary", use_container_width=True)
         logger.debug(f"Generate post button pressed: {generate_post_button}")
         if generate_post_button:
-            if picture_mode and post_prompt != "":
+            if picture_mode and post_prompt != "" and st.session_state.size_choice is not None:
                 st.session_state.post_prompt = post_prompt
                 st.session_state.post_page = "display_post"
                 st.rerun()
             else:
-                st.warning("Please make an image choice, and enter a prompt.")
+                st.warning("Please make an image choice, size choice, and enter a prompt.")
 
     st.text("")
     st.text("")
@@ -216,7 +225,7 @@ async def post_home():
     )
     examples_button = st.button("See Examples", type="primary", use_container_width=True)
     if examples_button:
-        switch_page("Dalle2Examples")
+        switch_page("Dalle3StreamingExamples")
         st.rerun()
 
 async def display_post():
@@ -322,13 +331,13 @@ async def display_post():
         components.html(html, height=75)
         st.text("")
     if not st.session_state.generated_image != [] and st.session_state.user_image_string:
-        with st.spinner("Hang tight, we are generating your images..."):
+        with st.spinner("Hang tight, we are generating your image..."):
             image_prompt = await alter_image(st.session_state.post_prompt, st.session_state.user_image_string)
             st.session_state.generated_image = await generate_dalle3_image(
                 prompt=image_prompt
             )
     elif not st.session_state.generated_image != [] and st.session_state.user_image_string is None:
-        with st.spinner("Hang tight, we are generating your images..."):
+        with st.spinner("Hang tight, we are generating your image..."):
             image_prompt = await get_image_prompt(st.session_state.post_prompt)
             st.session_state.generated_image = await generate_dalle3_image(
                 prompt=image_prompt

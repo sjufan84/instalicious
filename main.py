@@ -216,7 +216,7 @@ async def post_home():
     )
     examples_button = st.button("See Examples", type="primary", use_container_width=True)
     if examples_button:
-        switch_page("Dalle2Examples")
+        switch_page("Dalle2StreamingExamples")
         st.rerun()
 
 async def display_post():
