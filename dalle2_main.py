@@ -6,6 +6,7 @@ from PIL import Image
 from pillow_heif import register_heif_opener
 from streamlit_extras.stylable_container import stylable_container
 from streamlit_extras.switch_page_button import switch_page
+import streamlit.components.v1 as components
 from utils.image_utils import generate_dalle2_images
 from utils.post_utils import create_post, alter_image
 import logging
@@ -280,10 +281,25 @@ async def display_post():
             <p style="color:#203590; font-weight: bold; margin: 15px 15px 30px 15px;">{hashtags_string}</p>
             </div>
         ''', unsafe_allow_html=True)
+    total_post = st.session_state.current_post + " " + hashtags_string
+    html = f"""
+    <input type="text" id="textToCopy" value="{total_post}" style="color:transparent;
+    border-color:transparent;">
+    <button onclick="copyToClipboard()" style="background-color:transparent;
+    margin-left: 9em; border-radius:4px;">Copy Post 📋</button>
 
-    st.text("")
-    st.text("")
+    <script>
+        function copyToClipboard() {{
+            var copyText = document.getElementById("textToCopy");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); /* For mobile devices */
+            document.execCommand("copy");
+            alert("Copied the text: " + copyText.value);
+        }}
+    </script>
+    """
 
+    components.html(html, height=50)
     st.markdown(
         """<p style='text-align: center; color: #000000;
         font-size: 20px; font-family:"Arapey";'>Here are your images!</p>""", unsafe_allow_html=True
@@ -298,12 +314,11 @@ async def display_post():
             key="image-display-container",
             css_styles="""
                     button {
-                        color: #ffffff;
+                        color: white;
                         background-color: #76beaa;
                     }
             """,
         ):
-            st.markdown("##### Here are your images!")
             col1, col2, col3 = st.columns(3, gap="medium")
             # Display the iamges from the list of generated images
             with col1:

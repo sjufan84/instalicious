@@ -100,7 +100,9 @@ def main():
             "./resources/new_images/friendlys_new.png"
         ]
 
-        selected_prompt = st.selectbox("Select a prompt", [f"Prompt {i+1}" for i in range(len(prompts_list))])
+        selected_prompt = st.selectbox(
+            "Select an example", [f"Example {i+1}" for i in range(len(prompts_list))]
+        )
 
         # Display the corresponding generated post
         if selected_prompt:

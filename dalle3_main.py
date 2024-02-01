@@ -5,6 +5,7 @@ import io
 from PIL import Image
 from pillow_heif import register_heif_opener
 from streamlit_extras.stylable_container import stylable_container
+import streamlit.components.v1 as components
 from streamlit_extras.switch_page_button import switch_page
 from utils.image_utils import generate_dalle3_image
 from utils.post_utils import create_post, alter_image
@@ -289,8 +290,24 @@ async def display_post():
             </div>
         ''', unsafe_allow_html=True)
 
-    st.text("")
-    st.text("")
+    total_post = st.session_state.current_post + " " + hashtags_string
+    html = f"""
+    <input type="text" id="textToCopy" value="{total_post}" style="color:transparent;
+    border-color:transparent;">
+    <button onclick="copyToClipboard()" style="background-color:transparent;
+    margin-left: 9em; border-radius:4px;">Copy Post 📋</button>
+
+    <script>
+        function copyToClipboard() {{
+            var copyText = document.getElementById("textToCopy");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); /* For mobile devices */
+            document.execCommand("copy");
+            alert("Copied the text: " + copyText.value);
+        }}
+    </script>
+    """
+    components.html(html, height=50)
 
     st.markdown(
         """<p style='text-align: center; color: #000000;
@@ -305,10 +322,10 @@ async def display_post():
         with stylable_container(
             key="image-display-container",
             css_styles="""
-                    button {
-                        color: #ffffff;
-                        background-color: #76beaa;
-                    }
+                button {
+                    color: white;
+                    background-color: #76beaa;
+                }
             """,
         ):
             # If the image model is dall-e-3, display 1 image
