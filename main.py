@@ -284,7 +284,7 @@ async def display_post():
 
     message_placeholder = st.empty()
     full_response = ""
-    if not st.session_state.current_post:
+    if st.session_state.current_post is None:
         try:
             completion = client.chat.completions.create(
                 model="gpt-4-turbo-preview",
@@ -370,6 +370,7 @@ async def display_post():
     if generate_new_post_button:
         # Reset the session state
         reset_session_variables()
+        st.session_state.current_post = None
         st.rerun()
 
 if st.session_state.post_page == "post_verify":
