@@ -148,7 +148,8 @@ async def alter_image(prompt: str, image_url: str):
                     are no hands in the generated image, that the highlight of the image is the food itself,
                     and that it is as photo-realistic as possible. You only need to focus
                     on the new image prompt for dall-e.  Only return the prompt for dall-e
-                    to use to generate the new, optimized image."""
+                    to use to generate the new, optimized image.
+                    Add Sigma 85mm f/1.4 to the end of your prompt."""
                 }
             ]
         },
@@ -191,7 +192,8 @@ async def get_image_prompt(post_prompt: str):
             photo-realistic with the food being the highlight of the image.  Make sure that there
             are no hands in the image, that the highlight of the image is the food itself,
             and that it is as photo-realistic as possible.  Keep your prompt as concise as possible
-            while still being descriptive enough to generate the desired image."""
+            while still being descriptive enough to generate the desired image.  Add Sigma 85mm f/1.4
+            to the end of your prompt."""
         }
     ]
     try:
