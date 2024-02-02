@@ -251,3 +251,54 @@ async def get_image_prompt(post_prompt: str):
     except OpenAIError as e:
         logger.error(f"Error generating prompt for image generation: {e}")
         return None
+
+async def alter_image2(prompt: str, image_url: str):
+    """ Generate a new dall-e prompt based on the user prompt and the image """
+    st.session_state.vision_status = "used"
+    messages = [
+        {
+            "role": "system", "content": [
+                {
+                    "type" : "text", "text" : f"""The user has uploaded an
+                    image and a prompt {prompt} that they
+                    would like to convert into a viral Instagram post. The prompt may be a recipe, a dish,
+                    a description of a restaurant experience, etc.
+                    Imagining that you are a professional food photographer,
+                    create an prompt for dall-e that takes the original image and
+                    optimizes it for maxiumum engagement on Instagram with the characteristics
+                    of a hyper-realistic photo, taking into consdideration the various facets of photography
+                    necessary to create stunning food photos.  Make sure that there
+                    are no hands in the generated photo, and
+                    that the food is the highlight of the photo.
+                    Keep the prompt as concise and focused."""
+                }
+            ]
+        },
+        {
+            "role" : "system", "content" : [
+                {
+                    "type" : "text", "text" : "This is the image that was passed to you:"
+                },
+                {
+                    "type" : "image_url", "image_url" : f"""data:image/jpeg;base64,
+                    {st.session_state.user_image_string}"""
+                }
+            ]
+        }
+    ]
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4-vision-preview",
+            messages=messages,
+            max_tokens=250,
+        )
+        logger.debug(f"Response: {response}")
+        prompt_response = response.choices[0].message.content
+        logger.debug(f"Prompt response: {prompt_response}")
+        st.session_state.vision_prompt = prompt_response
+        return prompt_response
+    except OpenAIError as e:
+        logger.error(f"Error generating prompt for image alteration: {e}")
+        return None
+

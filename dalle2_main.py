@@ -10,7 +10,7 @@ from streamlit_extras.switch_page_button import switch_page
 from openai import OpenAIError
 from dependencies import get_openai_client
 from utils.image_utils import generate_dalle2_images
-from utils.post_utils import alter_image, get_image_prompt
+from utils.post_utils import alter_image2, get_image_prompt
 import logging
 import base64
 
@@ -327,7 +327,7 @@ async def display_post():
         )
     if not st.session_state.generated_images != [] and st.session_state.user_image_string:
         with st.spinner("Hang tight, we are generating your images..."):
-            image_prompt = await alter_image(st.session_state.post_prompt, st.session_state.user_image_string)
+            image_prompt = await alter_image2(st.session_state.post_prompt, st.session_state.user_image_string)
             st.session_state.generated_images = await generate_dalle2_images(
                 prompt=image_prompt
             )
