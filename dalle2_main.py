@@ -327,7 +327,9 @@ async def display_post():
         )
     if not st.session_state.generated_images != [] and st.session_state.user_image_string:
         with st.spinner("Hang tight, we are generating your images..."):
-            image_prompt = await alter_image2(st.session_state.post_prompt, st.session_state.user_image_string)
+            image_prompt = await alter_image2(
+                st.session_state.post_prompt, st.session_state.user_image_string
+            )
             st.session_state.generated_images = await generate_dalle2_images(
                 prompt=image_prompt
             )

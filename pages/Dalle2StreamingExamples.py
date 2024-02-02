@@ -123,7 +123,7 @@ def main():
         st.text("")
         back_to_home = st.button("Back to Home", type="primary", use_container_width=True)
         if back_to_home:
-            switch_page("main")
+            switch_page("dalle2_main")
 
 if __name__ == "__main__":
     main()

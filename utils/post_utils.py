@@ -266,7 +266,8 @@ async def alter_image2(prompt: str, image_url: str):
                     Imagining that you are a professional food photographer,
                     create an prompt for dall-e that takes the original image and
                     optimizes it for maxiumum engagement on Instagram with the characteristics
-                    of a hyper-realistic photo, taking into consdideration the various facets of photography
+                    of a hyper-realistic photo, taking into
+                    consdideration the various facets of photography
                     necessary to create stunning food photos.  Make sure that there
                     are no hands in the generated photo, and
                     that the food is the highlight of the photo.
@@ -303,33 +304,40 @@ async def alter_image2(prompt: str, image_url: str):
         return None
 
 async def get_image_prompt2(post_prompt: str):
+    i = 0
     messages = [
         {
-            "role" : "system", 
+            "role" : "system",
             "content" : f"""The user has provided a prompt
-                    {post_prompt} that they
-                        would like to convert into a viral Instagram post. The prompt may be a recipe, a dish,
-                        a description of a restaurant experience, etc.
-                        Imagining that you are a professional food photographer,
-                        create an prompt for dall-e that takes the original image and
-                        optimizes it for maxiumum engagement on Instagram with the characteristics
-                        of a hyper-realistic photo, taking into consdideration the various facets of photography
-                        necessary to create stunning food photos.  Make sure that there
-                        are no hands in the generated photo, and
-                        that the food is the highlight of the photo.
-                        Keep the prompt as concise and focused."""
+                    {post_prompt} that they would like to convert
+                    into a viral Instagram post. The prompt may be a recipe, a dish,
+                    a description of a restaurant experience, etc.
+                    Generate a short and concise prompt for dall-e as if you were a professional
+                    food photographer that would generate a hyperr-realistic photo baed on the user's prompt.
+                    Make sure there are no hands in the photo,
+                    and that the food is the highlight of the photo.
+                    Tell dall-e to use the following camera settings:
+                    - 50mm prime lens
+                    - f/2.8 aperture
+                    - ISO 100
+                    - 1/60 shutter speed
+                    """
         }
     ]
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4-turbo-preview",
-            messages=messages,
-            max_tokens=250,
-        )
-        logger.debug(f"Response: {response}")
-        prompt_response = response.choices[0].message.content
-        logger.debug(f"Prompt response: {prompt_response}")
-        return prompt_response
-    except OpenAIError as e:
-        logger.error(f"Error generating prompt for image generation: {e}")
-        return None
+    while i <= 3:
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4-turbo-preview",
+                messages=messages,
+                max_tokens=250,
+            )
+            logger.debug(f"Response: {response}")
+            prompt_response = response.choices[0].message.content
+            logger.debug(f"Prompt response: {prompt_response}")
+            return prompt_response
+        except OpenAIError as e:
+            logger.error(f"Error generating prompt for image generation: {e}")
+            i += 1
+            continue
+    # If all of the models fail, return the original prompt
+    return post_prompt
