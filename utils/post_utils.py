@@ -142,14 +142,25 @@ async def alter_image(prompt: str, image_url: str):
                     "type" : "text", "text" : f"""The user has uploaded an
                     image and a prompt {prompt} that they
                     would like to convert into a viral Instagram post. The prompt may be a recipe, a dish,
-                    a description of a restaurant experience, etc.  Based on the prompt and the image,
-                    create an image prompt for dall-e that takes the original image and
-                    optimizes it for maxiumum engagement on Instagram.  Make sure that there
-                    are no hands in the generated image, that the highlight of the image is the food itself,
-                    and that it is as photo-realistic as possible. You only need to focus
-                    on the new image prompt for dall-e.  Only return the prompt for dall-e
-                    to use to generate the new, optimized image.
-                    Add Sigma 85mm f/1.4 to the end of your prompt."""
+                    a description of a restaurant experience, etc.
+                    Imagining that you are a professional photographer,
+                    create an prompt for dall-e that takes the original image and
+                    optimizes it for maxiumum engagement on Instagram with the characteristics
+                    of a hyper-realistic photo.  Think about the optimal focus of the image,
+                    the desired photographic effects
+                    (i.e. shallow depth of field, natural lighting), composition
+                    (rule of thirds, close-up shot),
+                    sensory details,
+                    technical specifications (i.e. 50 mm prime lens, f/2.8 aperture),
+                    emotional and aesthetic appeal (i.e. warm, inviting glow,
+                    comfort, homemade quality) and other considerations that a professional
+                    photographer would take into account.  Again, the goal is to create the
+                    most hyper-realistic and true to life photograph that
+                    is geared toward accomodating the user's
+                    prompt and the uploaded image. Make sure that there
+                    are no hands in the generated photo, and that the food is the highlight of the photo.
+                    Keep the prompt as concise as possible while still being
+                    descriptive enough to generate the desired photo."""
                 }
             ]
         },
@@ -184,16 +195,29 @@ async def alter_image(prompt: str, image_url: str):
 async def get_image_prompt(post_prompt: str):
     messages = [
         {
-            "role": "system", "content": f"""The user would like
-            for you to generate an Instagram post optimized
-            for engagement and virality based on the prompt {post_prompt} they have given.  This could
-            be a recipe, a description of a dish, a description of a restaurant experience, etc.
-            Your job is to generate an image prompt for dall-e that will generate the best
-            photo-realistic with the food being the highlight of the image.  Make sure that there
-            are no hands in the image, that the highlight of the image is the food itself,
-            and that it is as photo-realistic as possible.  Keep your prompt as concise as possible
-            while still being descriptive enough to generate the desired image.  Add Sigma 85mm f/1.4
-            to the end of your prompt."""
+            "role": "system", "content": f"""
+            The user has provided a prompt {post_prompt} that they
+            would like to convert into a viral Instagram post.
+            The prompt may be a recipe, a dish,
+            a description of a restaurant experience, etc.
+            Imagining that you are a professional food photographer,
+            create an prompt for dall-e that best conveys the user's prompt
+            for maxiumum engagement on Instagram with the characteristics
+            of a hyper-realistic photo.  Think about the optimal focus of the image,
+            the desired photographic effects
+            (i.e. shallow depth of field, natural lighting), composition
+            (rule of thirds, close-up shot),
+            sensory details,
+            technical specifications (i.e. 50 mm prime lens, f/2.8 aperture),
+            emotional and aesthetic appeal (i.e. warm, inviting glow,
+            comfort, homemade quality) and other considerations that a professional
+            photographer would take into account.  Again, the goal is to create the
+            most hyper-realistic and true to life photograph that
+            is geared toward accomodating the user's
+            prompt and the uploaded image. Make sure that there
+            are no hands in the generated photo, and that the food is the highlight of the photo.
+            Keep the prompt as concise as possible while still being
+            descriptive enough to generate the desired photo."""
         }
     ]
     try:
@@ -207,5 +231,5 @@ async def get_image_prompt(post_prompt: str):
         logger.debug(f"Prompt response: {prompt_response}")
         return prompt_response
     except OpenAIError as e:
-        logger.error(f"Error generating prompt for image alteration: {e}")
+        logger.error(f"Error generating prompt for image generation: {e}")
         return None
