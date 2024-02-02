@@ -13,7 +13,13 @@ from utils.image_utils import generate_dalle3_image
 from utils.post_utils import alter_image, get_image_prompt
 import logging
 import base64
-""" Testing """
+
+
+st.set_page_config(
+    page_title="Instalicio.us",
+    initial_sidebar_state="collapsed",
+)
+
 register_heif_opener()
 
 # Create the OpenAI client
@@ -36,12 +42,6 @@ def heic_to_base64(heic_path):
     img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
 
     return img_base64
-
-
-st.set_page_config(
-    page_title="Instalicio.us",
-    initial_sidebar_state="collapsed",
-)
 
 # Import Google Font in Streamlit CSS
 st.markdown(
