@@ -46,6 +46,7 @@ async def generate_dalle3_image(prompt : str):
             size=f"{st.session_state['size_choice']}",
             quality="standard",
             n=1,
+            style="vivid",
             response_format="b64_json"
         )
         returned_image = response.data[0].b64_json[:100]
