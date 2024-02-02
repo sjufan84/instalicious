@@ -302,3 +302,34 @@ async def alter_image2(prompt: str, image_url: str):
         logger.error(f"Error generating prompt for image alteration: {e}")
         return None
 
+async def get_image_prompt2(post_prompt: str):
+    messages = [
+        {
+            "role" : "system", 
+            "content" : f"""The user has provided a prompt
+                    {post_prompt} that they
+                        would like to convert into a viral Instagram post. The prompt may be a recipe, a dish,
+                        a description of a restaurant experience, etc.
+                        Imagining that you are a professional food photographer,
+                        create an prompt for dall-e that takes the original image and
+                        optimizes it for maxiumum engagement on Instagram with the characteristics
+                        of a hyper-realistic photo, taking into consdideration the various facets of photography
+                        necessary to create stunning food photos.  Make sure that there
+                        are no hands in the generated photo, and
+                        that the food is the highlight of the photo.
+                        Keep the prompt as concise and focused."""
+        }
+    ]
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4-turbo-preview",
+            messages=messages,
+            max_tokens=250,
+        )
+        logger.debug(f"Response: {response}")
+        prompt_response = response.choices[0].message.content
+        logger.debug(f"Prompt response: {prompt_response}")
+        return prompt_response
+    except OpenAIError as e:
+        logger.error(f"Error generating prompt for image generation: {e}")
+        return None
