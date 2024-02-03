@@ -166,7 +166,6 @@ async def post_home():
             '###### 📸 Snap a Pic, 📤 Upload an Image, or Let Us Generate One For You!',
             ("Snap a pic", "Upload an image", "Let Us Generate One For You"), index=None,
         )
-        st.write(st.session_state.generated_images)
         if picture_mode == "Snap a pic":
             uploaded_image = st.camera_input("Snap a pic")
             if uploaded_image:
