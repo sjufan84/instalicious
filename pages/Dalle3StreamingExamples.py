@@ -96,8 +96,9 @@ def main():
         ]
 
         new_images_list = [
-            "./resources/sushi.png", "./resources/new_images/new_arroz.png",
-            "./resources/new_images/friendlys_new.png"
+            ["./resources/new_images/speakeasy_story.png", "./resources/new_images/speakeasy_square.png"],
+            ["./resources/new_images/arroz_story.png", "./resources/new_images/arroz_square.png"],
+            ["./resources/new_images/burger_story.png", "./resources/new_images/burger_square.png"]
         ]
 
         selected_prompt = st.selectbox(
@@ -124,8 +125,9 @@ def main():
                     st.markdown(":red[**No image was provided.  We generated one!**]")
 
             with col2:
-                st.markdown("##### Generated Image:")
-                st.image(new_images_list[int(selected_prompt[-1]) - 1], width=300)
+                st.markdown("##### Generated Images (Stories, Square):")
+                for image in new_images_list[int(selected_prompt[-1]) - 1]:
+                    st.image(image, width=300)
         st.text("")
         back_to_home = st.button("Back to Home", type="primary", use_container_width=True)
         if back_to_home:

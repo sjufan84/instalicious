@@ -13,15 +13,9 @@ client = get_openai_client()
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-if "generated_images" not in st.session_state:
-    st.session_state["generated_images"] = []
-if "size_choice" not in st.session_state:
-    st.session_state["size_choice"] = "1024x1024"
-
 # Decode Base64 JSON to Image
 def decode_image(image_data, image_name):
     """ Decode the image data from the given image request. """
-    logger.debug(f"Decoding image: {image_data}")
     # Decode the image
     image_bytes = base64.b64decode(image_data)
     # Convert the bytes to an image
@@ -34,25 +28,21 @@ class ImageRequest(BaseModel):
     """ Image Request Model """
     prompt: str = Field(..., title="Prompt", description="The prompt to generate an image from.")
 
-async def generate_dalle3_image(prompt : str):
+async def generate_dalle3_image(prompt : str, size_choice : str):
     """ Generate an image from the given image request. """
-    logger.debug(f"Generating image for prompt: {prompt}")
-    logger.debug(f"Image model: {st.session_state['image_model']}")
+    logger.debug(f"Generating image for prompt: {prompt} with size: {size_choice}")
     # Generate the image
     try:
         response = client.images.generate(
             prompt=prompt,
             model="dall-e-3",
-            size=f"{st.session_state['size_choice']}",
+            size=size_choice,
             quality="standard",
             n=1,
             style="vivid",
             response_format="b64_json"
         )
-        returned_image = response.data[0].b64_json[:100]
-        logger.debug(f"Returned image: {returned_image}")
         decoded_image = decode_image(image_data=response.data[0].b64_json, image_name="image.png")
-        logging.debug(f"Decoded image: {decoded_image}")
 
         return decoded_image
 

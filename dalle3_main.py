@@ -63,11 +63,11 @@ def init_session_variables():
     session_vars = [
         "image_model", "user_image_string", "generate_image", "post_prompt",
         "current_post", "current_hashtags", "current_image_prompt", "post_page",
-        "generated_image", "size_choice"
+        "generated_images", "size_choices"
     ]
     default_values = [
         "dall-e-3", None, False, None, None, None, None, "post_verify",
-        [], None
+        [], []
     ]
 
     for var, default_value in zip(session_vars, default_values):
@@ -77,7 +77,7 @@ def init_session_variables():
 def reset_session_variables():
     session_vars = [
         "image_model", "is_user_image", "user_image_string", "generate_image", "post_prompt"
-        "current_post", "current_hashtags", "current_image_prompt", "generated_image"
+        "current_post", "current_hashtags", "current_image_prompt", "generated_images", "size_choices"
     ]
     for var in session_vars:
         if var in st.session_state:
@@ -166,6 +166,7 @@ async def post_home():
             '###### 📸 Snap a Pic, 📤 Upload an Image, or Let Us Generate One For You!',
             ("Snap a pic", "Upload an image", "Let Us Generate One For You"), index=None,
         )
+        st.write(st.session_state.generated_images)
         if picture_mode == "Snap a pic":
             uploaded_image = st.camera_input("Snap a pic")
             if uploaded_image:
@@ -194,19 +195,21 @@ async def post_home():
             st.session_state.user_image_string = None
         st.text("")
         post_prompt = st.text_area("""###### Tell Us About This Recipe or Meal""")
-
-        size_choice = st.radio(
-            "Select your desired format:", options=["Square", "Stories"], horizontal=True, index=None,
-        )
-        if size_choice == "Square":
-            st.session_state.size_choice = "1024x1024"
-        elif size_choice == "Stories":
-            st.session_state.size_choice = "1024x1792"
+        st.markdown("**Choose the image size(s) for your post:**")
+        square_choice = st.checkbox("Square", value=False)
+        stories_choice = st.checkbox("Stories", value=False)
+        # If neither are checked, display a warning
+        if not square_choice and not stories_choice:
+            st.warning("Please select at least one image size.")
 
         generate_post_button = st.button("Generate Post", type="primary", use_container_width=True)
         logger.debug(f"Generate post button pressed: {generate_post_button}")
         if generate_post_button:
-            if picture_mode and post_prompt != "" and st.session_state.size_choice is not None:
+            if picture_mode and post_prompt != "" and (square_choice or stories_choice):
+                if square_choice:
+                    st.session_state.size_choices.append("1024x1024")
+                if stories_choice:
+                    st.session_state.size_choices.append("1024x1792")
                 st.session_state.post_prompt = post_prompt
                 st.session_state.post_page = "display_post"
                 st.rerun()
@@ -330,24 +333,28 @@ async def display_post():
         """
         components.html(html, height=75)
         st.text("")
-    if not st.session_state.generated_image != [] and st.session_state.user_image_string:
+    if not st.session_state.generated_images != [] and st.session_state.user_image_string:
         with st.spinner("Hang tight, we are generating your image..."):
             image_prompt = await alter_image(st.session_state.post_prompt, st.session_state.user_image_string)
-            st.session_state.generated_image = await generate_dalle3_image(
-                prompt=image_prompt
-            )
-    elif not st.session_state.generated_image != [] and st.session_state.user_image_string is None:
+            for size_choice in st.session_state.size_choices:
+                generated_image = await generate_dalle3_image(
+                    prompt=image_prompt, size_choice=size_choice
+                )
+                st.session_state.generated_images.append(generated_image)
+    elif not st.session_state.generated_images != [] and st.session_state.user_image_string is None:
         with st.spinner("Hang tight, we are generating your image..."):
             image_prompt = await get_image_prompt(st.session_state.post_prompt)
-            st.session_state.generated_image = await generate_dalle3_image(
-                prompt=image_prompt
-            )
+            for size_choice in st.session_state.size_choices:
+                generated_image = await generate_dalle3_image(
+                    prompt=image_prompt, size_choice=size_choice
+                )
+                st.session_state.generated_images.append(generated_image)
 
     st.markdown(
         """<p style='text-align: center; color: #000000;
-        font-size: 20px; font-family:"Arapey";'>Here's your image!</p>""", unsafe_allow_html=True
+        font-size: 20px; font-family:"Arapey";'>Here are your image(s)!</p>""", unsafe_allow_html=True
     )
-    if st.session_state.generated_image:
+    if st.session_state.generated_images != []:
         with stylable_container(
             key="image-display-container",
             css_styles="""
@@ -357,10 +364,28 @@ async def display_post():
                 }
             """,
         ):
-            # If the image model is dall-e-3, display 1 image
-            logger.debug(f"Your Image: {st.session_state.generated_image}")
-            display_image(st.session_state.generated_image)
-            get_image_download_link(st.session_state.generated_image, filename="instalicious_image.png")
+            # If the length of the generated images list is greater than 1,
+            # use 2 columns to display the images
+            if len(st.session_state.generated_images) > 1:
+                col1, col2 = st.columns(2, gap="medium")
+                with col1:
+                    st.image(
+                        st.session_state.generated_images[0], use_column_width=True
+                    )
+                    # Create the download link for the first image
+                    get_image_download_link(st.session_state.generated_images[0], "image1.png")
+                with col2:
+                    st.image(
+                        st.session_state.generated_images[1], use_column_width=True
+                    )
+                    # Create the download link for the first image
+                    get_image_download_link(st.session_state.generated_images[1], "image2.png")
+            else:
+                st.image(
+                    st.session_state.generated_images[0], use_column_width=True
+                )
+                # Create the download link for the first image
+                get_image_download_link(st.session_state.generated_images[0], "image.png")
 
     generate_new_post_button = st.button("Generate New Post", type="primary", use_container_width=True)
     if generate_new_post_button:
