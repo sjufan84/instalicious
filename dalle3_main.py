@@ -333,7 +333,7 @@ async def display_post():
         components.html(html, height=75)
         st.text("")
     if not st.session_state.generated_images != [] and st.session_state.user_image_string:
-        with st.spinner("Hang tight, we are generating your image..."):
+        with st.spinner("Hang tight, we are generating your image(s).  This may take a minute."):
             image_prompt = await alter_image(st.session_state.post_prompt, st.session_state.user_image_string)
             for size_choice in st.session_state.size_choices:
                 generated_image = await generate_dalle3_image(
@@ -341,7 +341,7 @@ async def display_post():
                 )
                 st.session_state.generated_images.append(generated_image)
     elif not st.session_state.generated_images != [] and st.session_state.user_image_string is None:
-        with st.spinner("Hang tight, we are generating your image..."):
+        with st.spinner("Hang tight, we are generating your image(s).  This may take a minute."):
             image_prompt = await get_image_prompt(st.session_state.post_prompt)
             for size_choice in st.session_state.size_choices:
                 generated_image = await generate_dalle3_image(
