@@ -105,7 +105,6 @@ def get_image_download_link(image, filename="downloaded_image.png"):
         label="Download Image",
         data=buffered.getvalue(),
         file_name=filename,
-        mime="image/png",
         use_container_width=True
     )
 
@@ -281,18 +280,18 @@ async def display_post():
                 Make sure to that the post includes hashtags
                 and that the post is presented in a clear
                 and organized manner.  Return only the generated post text and hashtags.
-                You do not need to return any other message content other than a note
-                at the end that says something like "Now give us just a sec, and we will generate
-                an amazing image for you to go with your post."
+                Do not return any extra text besides the post and hashtags text.  Do not
+                add an intro or a conclusion to the post, just the post and hashtags."
                 """
             },
             {
                 "role" : "user",
-                "content" : f"""Can you help me generate an amazing
-                Instagram post based on this prompt {st.session_state.post_prompt}?"""
+                "content" : f"""Generate an amazing
+                Instagram post based on this prompt {st.session_state.post_prompt}."""
             }
         ]
-
+    st.markdown("**Here's your post!**")
+    st.text("")
     message_placeholder = st.empty()
     full_response = ""
     if st.session_state.current_post is None:
@@ -348,11 +347,6 @@ async def display_post():
                     prompt=image_prompt, size_choice=size_choice
                 )
                 st.session_state.generated_images.append(generated_image)
-
-    st.markdown(
-        """<p style='text-align: center; color: #000000;
-        font-size: 20px; font-family:"Arapey";'>Here are your image(s)!</p>""", unsafe_allow_html=True
-    )
     if st.session_state.generated_images != []:
         with stylable_container(
             key="image-display-container",
@@ -363,6 +357,10 @@ async def display_post():
                 }
             """,
         ):
+            st.markdown(
+                """<p style='text-align: center; color: #000000;
+                font-size: 20px; font-family:"Arapey";'>Here are your image(s)!</p>""", unsafe_allow_html=True
+            )
             # If the length of the generated images list is greater than 1,
             # use 2 columns to display the images
             if len(st.session_state.generated_images) > 1:
