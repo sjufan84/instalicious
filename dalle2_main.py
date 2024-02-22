@@ -111,7 +111,7 @@ def post_verify():
     password_input = st.text_input("Enter the password to access this page", type="password")
     submit_password_button = st.button("Submit", type="primary", use_container_width=True)
     if submit_password_button:
-        if password_input == "cupcake":
+        if password_input == "cupcake1!":
             st.session_state.post_page = "post_home"
             st.rerun()
         else:
